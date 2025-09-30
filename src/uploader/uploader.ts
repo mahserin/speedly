@@ -2,7 +2,7 @@ import path from "path"
 import fs from "fs"
 import multer from 'multer'
 import mongoose from "mongoose";
-const getConfig = require("../util/getConfig");
+import getConfig from "../util/getConfig";
 const relativePath = '../../../public';
 let configs = {
   saveInDb: false,
