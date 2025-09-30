@@ -4,7 +4,13 @@ import multer from 'multer'
 import mongoose from "mongoose";
 import getConfig from "../util/getConfig";
 const relativePath = '../../../public';
-let configs = {
+let configs: {
+  saveInDb: boolean;
+  prefix: string;
+  limit: number;
+  format: RegExp;
+  [key: string]: any;
+} = {
   saveInDb: false,
   prefix: "",
   limit: 5,
