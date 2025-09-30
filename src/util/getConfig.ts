@@ -3,7 +3,7 @@ import fs from 'fs'
 import { cosmiconfigSync } from 'cosmiconfig';
 export default (configField: string): { [key: string]: unknown } => {
     const explorer = cosmiconfigSync("speedly"); // اسم پروژه‌ت
-    const result = explorer.search(process.cwd());
+    const result = explorer.search();
 
     if (result && result.config && result.config[configField]) {
         return result.config[configField];
