@@ -29,7 +29,7 @@ declare global {
 
 console.log( 'uploader' , 15 , configs);
 
-module.exports = (destination : string | ((req : Request ,file : Express.Multer.File) => string) = "/image", config = configs) => {
+export default (destination : string | ((req : Request ,file : Express.Multer.File) => string) = "/image", config = configs) => {
   let dest : string
   try {
     Object.entries(config).forEach(([key, val]) => {

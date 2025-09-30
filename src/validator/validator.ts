@@ -22,7 +22,7 @@ type InferValidation<T extends ValidationSchema> = {
 };
 
 // این تابع validator generic هست
-export const validator =
+ const validator =
   <T extends ValidationSchema>(schemas: T): RequestHandler =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -54,3 +54,4 @@ export const validator =
       }
 
   };
+export default validator

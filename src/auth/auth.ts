@@ -77,4 +77,4 @@ const auth = (config = gConfig ) => {
     return useAuth
 }
 
-module.exports = auth
+export default auth
