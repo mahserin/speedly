@@ -2,6 +2,7 @@ import getConfig from '../util/getConfig'
 import { Request , Response , NextFunction } from 'express'
 const gConfig = { admin: { role: 'ADMIN', model : '../models/admin' } ,jwtSecretEnv : 'JWT_KEY', customValidator : (req :Request , key : string) => {return true} , ...getConfig('auth') }
 type Handler = (req : Request , res : Response , next : (errorMessage? :string) => unknown) => unknown
+const holders:{user? : (...handlers:Handler[]) => unknown,admin? :(...handlers: [ { permission: string }, ...Handler[] ] | Handler[]) => unknown,any?:(...handlers : Handler[])=>unknown} = {}
 const auth = (config = gConfig ) => {
     // const adminModel = require('../models/admin')
     let handlerState : {[key : string] : {handlers : Handler[]}} = {}
@@ -52,8 +53,7 @@ const auth = (config = gConfig ) => {
            next({status:403,json:{message: (error instanceof Error ? error.message : 'error on authentication please login again')}})
     }
     }
-
-    useAuth.admin = (...handlers: [ { permission: string }, ...Handler[] ] | Handler[]) => {
+    holders.admin = (...handlers: [ { permission: string }, ...Handler[] ] | Handler[]) => {
         if (!Array.isArray(handlers)) throw new Error('handlers must be an array')
         const hasConfig = typeof handlers[0] === 'object' && 'permission' in handlers[0];
         const configObj = hasConfig ? handlers[0] as { permission: string } : undefined;
@@ -64,16 +64,17 @@ const auth = (config = gConfig ) => {
         };
         return useAuth
     }
-    useAuth.user = (...handlers : Handler[]) => {
+    holders.user = (...handlers : Handler[]) => {
         if (!Array.isArray(handlers)) throw new Error('handlers must be an array')
         handlerState.user = { handlers }
         return useAuth
     }
-    useAuth.any = (...handlers : Handler[]) => {
+    holders.any = (...handlers : Handler[]) => {
         if (!Array.isArray(handlers)) throw new Error('handlers must be an array')
         handlerState.any = { handlers }
         return useAuth
     }
+    Object.assign(useAuth,holders)
     return useAuth
 }
 
