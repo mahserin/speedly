@@ -14,7 +14,7 @@
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "publish": "git add . && git commit -m 'publish' && npm version patch && npm publish ",
+    "publish": "npm run build && git add . && git commit -m 'publish' && npm version patch && npm publish ",
     "dev": "ts-node src/index.ts"
   },
   "author": "MAHSERIN",
