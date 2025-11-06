@@ -21,7 +21,7 @@
     "declaration": true,
     // "declarationMap": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    // "forceConsistentCasingInFileNames": true,
     // Stricter Typechecking Options
     // "noUncheckedIndexedAccess": true,
     // "exactOptionalPropertyTypes": true,
