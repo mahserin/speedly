@@ -57,7 +57,7 @@ const usingMongoDb = (collectionName: string, config: {
     queries: [],
   };
   if (config?.path) __path = config.path;
-  model = require(path.join(__path, collectionName));
+  model = require(path.join(require.main?.filename|| './' , __path, collectionName));
   const actionHandler = {
     find: (match = {}) => {
       queryState.action = "find";
