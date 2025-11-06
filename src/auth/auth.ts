@@ -1,81 +1,108 @@
+import { Request, Response, NextFunction } from 'express'
 import getConfig from '../util/getConfig'
-import { Request , Response , NextFunction } from 'express'
-const gConfig = { admin: { role: 'ADMIN', model : '../models/admin' } ,jwtSecretEnv : 'JWT_KEY', customValidator : (req :Request , key : string) => {return true} , ...getConfig('auth') }
-type Handler = (req : Request , res : Response , next : (errorMessage? :string) => unknown) => unknown
-const holders:{user? : (...handlers:Handler[]) => unknown,admin? :(...handlers: [ { permission: string }, ...Handler[] ] | Handler[]) => unknown,any?:(...handlers : Handler[])=>unknown} = {}
-const auth = (config = gConfig ) => {
-    // const adminModel = require('../models/admin')
-    let handlerState : {[key : string] : {handlers : Handler[]}} = {}
-    const useAuth = async (req : Request, res : Response, next : NextFunction) => {
-        try {
-        const nextFunc = (handlers : Handler[], index = 0) => (errorMessage = '') => {
-            if (errorMessage) return next(errorMessage)
-            if (!handlers.length || !handlers[index + 1]) return next()
-            handlers[index + 1](req , res , nextFunc(handlers , index + 1))
-        }
-        const keys = Object.keys(handlerState);
-        for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
-            if (!handlerState[key]?.handlers?.length) continue
-            if(await gConfig?.customValidator?.(req , key)){
-                 return await handlerState[key].handlers[0](req ,res , nextFunc(handlerState[key].handlers))
-            }else if(await gConfig?.customValidator?.(req , key) == null){
-                return next({status: 401, json: {message: 'unauthorized'}})
-            
-            }else if (i === keys.length - 1) {
-                next({status : 405,json:{message : 'you don\'t have access to this section'}})
-            }else continue
-        }
-        
-            // اینجا اگر i === keys.length - 1 باشد یعنی آخرین آیتم هستی
-            
-        
 
-        // }else if (!req.cookies.AT_SECRET) {
-        //     if (!handlerState.user || !handlerState.user?.handlers?.length) return res.status(403).json({ message: 'you dont have access for this section' })
-        //     handlerState.user.handlers[0](req ,res , nextFunc(handlerState.user.handlers))
-        // }else {
-        //     if(!handlerState.admin || !handlerState.admin?.handlers?.length) {
-        //         if (!handlerState.user || !handlerState.user?.handlers?.length) return res.status(404).json({ message: 'route not found  :(' })
-        //             handlerState.user.handlers[0](req ,res , nextFunc(handlerState.user.handlers))
-                
-        //     } else {
-        //         const tokenPayload = jwt.verify(req.cookies.AT_SECRET , process.env[gConfig.jwtSecretEnv])
-        //         const adminDoc = await adminModel.findById(tokenPayload.id)
-        //         if(!adminDoc)return res.status(403).json({ message: 'you don\'t have access for this section' })
-        //         if(adminDoc.role !='OWNER' && adminDoc.role != config?.admin?.role ) return res.status(403).json({ message: 'you dont have access for this section' })
-        //         req.admin = adminDoc
-        //         handlerState.admin.handlers[0](req , res , nextFunc(handlerState.admin.handlers))
-        //     }
-        // }
+// ==================== TYPES ====================
+
+type Handler = (req: Request, res: Response, next: (errorMessage?: string) => unknown) => unknown
+
+interface UseAuth {
+  (req: Request, res: Response, next: NextFunction): Promise<void> | void
+  user: (...handlers: Handler[]) => UseAuth
+  admin: (...handlers: [{ permission?: string }, ...Handler[]] | Handler[]) => UseAuth
+  any: (...handlers: Handler[]) => UseAuth
+}
+
+interface AuthConfig {
+  admin?: { role: string; model: string }
+  jwtSecretEnv?: string
+  customValidator?: (req: Request, key: string) => Promise<boolean | null> | boolean | null
+}
+
+// ==================== DEFAULT CONFIG ====================
+
+const defaultConfig: AuthConfig = {
+  admin: { role: 'ADMIN', model: '../models/admin' },
+  jwtSecretEnv: 'JWT_KEY',
+  customValidator: async (req, key) => true,
+  ...getConfig('auth'),
+}
+
+// ==================== FACTORY FUNCTION ====================
+
+const auth = (config: AuthConfig = defaultConfig): UseAuth => {
+  const handlerState: Record<string, { handlers: Handler[] }> = {}
+
+  // ===== core middleware =====
+  const useAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const nextFunc = (handlers: Handler[], index = 0) => (errorMessage = '') => {
+        if (errorMessage) return next(errorMessage)
+        if (!handlers[index + 1]) return next()
+        handlers[index + 1](req, res, nextFunc(handlers, index + 1))
+      }
+
+      const keys = Object.keys(handlerState)
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i]
+        const state = handlerState[key]
+        if (!state?.handlers?.length) continue
+
+        const result = await config?.customValidator?.(req, key)
+
+        if (result === true) {
+          // authorized → execute chain
+          return void (await state.handlers[0](req, res, nextFunc(state.handlers)))
+        }
+        if (result === null) {
+          // explicitly unauthorized
+          return void next({ status: 401, json: { message: 'unauthorized' } })
+        }
+
+        // if none matched till last one → no access
+        if (i === keys.length - 1) {
+          return void next({ status: 405, json: { message: "you don't have access to this section" } })
+        }
+      }
+
+      // fallback: no handler matched
+      next({ status: 404, json: { message: 'no valid auth handler found' } })
     } catch (error: unknown) {
-        console.log( 'auth' , 42 , error);
-           next({status:403,json:{message: (error instanceof Error ? error.message : 'error on authentication please login again')}})
+      console.error('auth error:', error)
+      next({
+        status: 403,
+        json: {
+          message: error instanceof Error ? error.message : 'error on authentication, please login again',
+        },
+      })
     }
-    }
-    holders.admin = (...handlers: [ { permission: string }, ...Handler[] ] | Handler[]) => {
-        if (!Array.isArray(handlers)) throw new Error('handlers must be an array')
-        const hasConfig = typeof handlers[0] === 'object' && 'permission' in handlers[0];
-        const configObj = hasConfig ? handlers[0] as { permission: string } : undefined;
-        const handlerFns = hasConfig ? (handlers as any[]).slice(1) as Handler[] : handlers as Handler[];
-        handlerState[`admin${configObj?.permission ? `:${configObj.permission}` : ''}`] = {
-            ...(configObj ? { config: configObj } : {}),
-            handlers: handlerFns
-        };
-        return useAuth
-    }
-    holders.user = (...handlers : Handler[]) => {
-        if (!Array.isArray(handlers)) throw new Error('handlers must be an array')
-        handlerState.user = { handlers }
-        return useAuth
-    }
-    holders.any = (...handlers : Handler[]) => {
-        if (!Array.isArray(handlers)) throw new Error('handlers must be an array')
-        handlerState.any = { handlers }
-        return useAuth
-    }
-    Object.assign(useAuth,holders)
+  }
+
+  // ===== helpers =====
+  const register = (key: string, handlers: Handler[]) => {
+    handlerState[key] = { handlers }
     return useAuth
+  }
+
+  useAuth.user = (...handlers: Handler[]) => {
+    if (!handlers.length) throw new Error('user() requires at least one handler')
+    return register('user', handlers)
+  }
+
+  useAuth.any = (...handlers: Handler[]) => {
+    if (!handlers.length) throw new Error('any() requires at least one handler')
+    return register('any', handlers)
+  }
+
+  useAuth.admin = (...handlers: [{ permission?: string }, ...Handler[]] | Handler[]) => {
+    if (!handlers.length) throw new Error('admin() requires at least one handler')
+    const hasConfig = typeof handlers[0] === 'object' && 'permission' in handlers[0]
+    const configObj = hasConfig ? (handlers[0] as { permission?: string }) : undefined
+    const handlerFns = hasConfig ? (handlers as any[]).slice(1) as Handler[] : (handlers as Handler[])
+    const key = `admin${configObj?.permission ? `:${configObj.permission}` : ''}`
+    return register(key, handlerFns)
+  }
+
+  return useAuth
 }
 
 export default auth
