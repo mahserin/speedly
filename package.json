@@ -1,6 +1,6 @@
 {
   "name": "speedly",
-  "version": "1.2.17",
+  "version": "1.2.18",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -14,7 +14,7 @@
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "publish" : "git add . && git commit -m 'publish' && npm version patch && npm publish ",
+    "publish": "git add . && git commit -m 'publish' && npm version patch && npm publish ",
     "dev": "ts-node src/index.ts"
   },
   "author": "MAHSERIN",
