@@ -1,7 +1,7 @@
 import * as Types from "./types";
 
 import getConfig from "../util/getConfig";
-import { Request, Response, NextFunction } from "express";
+import e, { Request, Response, NextFunction } from "express";
 const gConfig = {
   admin: { role: "ADMIN", model: "../models/admin" },
   jwtSecretEnv: "JWT_KEY",
@@ -28,3 +28,5 @@ const auth: Types.Auth = {
     return executer("any");
   },
 };
+
+export default auth;
