@@ -3,18 +3,19 @@ import fs from "fs"
 import multer from 'multer'
 import mongoose from "mongoose";
 import getConfig from "../util/getConfig";
-const relativePath = '../../../public';
 let configs: {
   saveInDb: boolean;
   prefix: string;
   limit: number;
   format: RegExp;
+  path : string
   [key: string]: any;
 } = {
   saveInDb: false,
   prefix: "",
   limit: 5,
   format: /png|jpg|webp|jpeg/i,
+  path : '../../../public',
   ...getConfig("uploader")
 };
 import { NextFunction, Request, Response } from "express";
@@ -44,7 +45,7 @@ export default (destination : string | ((req : Request ,file : Express.Multer.Fi
             : destination;
 
           const splitPath = dest.split("/");
-          let currentPath = path.join(__dirname, relativePath);
+          let currentPath = path.join(require.main.filename || '', configs.path);
 
           splitPath.forEach(folder => {
             currentPath = path.join(currentPath, folder);
@@ -54,7 +55,7 @@ export default (destination : string | ((req : Request ,file : Express.Multer.Fi
             }
           });
 
-          cb(null, path.join(__dirname, relativePath, dest));
+          cb(null, path.join(require.main.filename || '', configs.path, dest));
         } catch (err :unknown) {
           cb(err as Error, "");
         }
@@ -70,7 +71,7 @@ export default (destination : string | ((req : Request ,file : Express.Multer.Fi
           const originalName = Buffer.from(file.originalname, "latin1").toString("utf8");
           const fileName = (configs.prefix ? configs.prefix + "-" : "") +
             originalName.replace(/\.\w+$/, "") + ext;
-          const filePath = path.join(__dirname, relativePath, dest, fileName);
+          const filePath = path.join(require.main.filename || '', configs.path, dest, fileName);
 console.log( 'uploader' , 65 , filePath);
 try {
   fs.existsSync(filePath)
@@ -127,7 +128,7 @@ try {
             }
 
             req.body[fieldName] = path
-              .join("/static", path.relative(path.join(__dirname, relativePath), req.file.path))
+              .join("/static", path.relative(path.join(require.main.filename || '', configs.path), req.file.path))
               .replaceAll(/\\/g, "/");
           }
 
@@ -142,7 +143,7 @@ try {
           if (req.files && Array.isArray(req.files) && req.files.length) {
             req.body[fieldName] = (req.files as Express.Multer.File[]).map(file =>
               path
-                .join("/static", path.relative(path.join(__dirname, relativePath), file.path))
+                .join("/static", path.relative(path.join(require.main.filename || '', configs.path), file.path))
                 .replaceAll(/\\/g, "/")
             );
           }
