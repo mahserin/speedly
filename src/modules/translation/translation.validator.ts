@@ -10,7 +10,8 @@ const schema = object({
 
 //? exports
 
-exports.put ={
+const put ={
   params: paramId,
   body : makeOptional(schema)
 }
+export {put}

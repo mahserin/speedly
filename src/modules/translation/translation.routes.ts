@@ -15,4 +15,4 @@ router.route('/').get(model('translation').find())
 },model('translation').create())
 router.route('/:id').put(auth.admin(), validator(v.put), model('translation').findByIdAndUpdate())
 
-module.exports = router;
+export default router;
