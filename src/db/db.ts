@@ -21,6 +21,7 @@ type ConfigsType = {
   dbType?: string;
   path?: string;
   dbEnv?: string;
+  type : 'internal'|'external'
   pagination?: {
     quantity?: number;
     detailed?: boolean;
@@ -32,6 +33,7 @@ type ConfigsType = {
 let configs: ConfigsType = {
   dbType: "mongodb",
   path: "../models",
+  type :'external',
   dbEnv: "DB_URL",
   ...getConfig("db"),
 };
@@ -51,13 +53,14 @@ type QueryState = {
 }
 const usingMongoDb = (collectionName: string, config: {
   message?: string; path?: string, 
-} = {}) => {
+  type? :'internal' | 'external'
+} = {type :'external'}) => {
   let model;
   let queryState: QueryState = {
     queries: [],
   };
   if (config?.path) __path = config.path;
-  model = require(path.join(require.main?.filename|| './' , __path, collectionName));
+  model = require(path.join(...(config.type == 'external' ? [require.main?.filename|| './' , __path] : ['../model']), collectionName));
   const actionHandler = {
     find: (match = {}) => {
       queryState.action = "find";
@@ -582,6 +585,7 @@ const db = (collectionName : string, config = configs) => {
     dbType: "mongodb",
     path: "../models",
     dbEnv: "DB_URL",
+    type :'external',
     ...getConfig("db"),
   };
   Object.entries(config).forEach(([key, value]) => {
