@@ -55,7 +55,7 @@ export default (destination : string | ((req : Request ,file : Express.Multer.Fi
             }
           });
 
-          cb(null, path.join(require.main.filename || '', configs.path, dest));
+          cb(null, path.join( configs.path, dest));
         } catch (err :unknown) {
           cb(err as Error, "");
         }
