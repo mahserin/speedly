@@ -45,7 +45,7 @@ export default (destination : string | ((req : Request ,file : Express.Multer.Fi
             : destination;
 
           const splitPath = dest.split("/");
-          let currentPath = path.join(require.main.filename || '', configs.path);
+          let currentPath = path.join(configs.path);
 
           splitPath.forEach(folder => {
             currentPath = path.join(currentPath, folder);
