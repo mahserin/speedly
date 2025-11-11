@@ -71,7 +71,7 @@ export default (destination : string | ((req : Request ,file : Express.Multer.Fi
           const originalName = Buffer.from(file.originalname, "latin1").toString("utf8");
           const fileName = (configs.prefix ? configs.prefix + "-" : "") +
             originalName.replace(/\.\w+$/, "") + ext;
-          const filePath = path.join(require.main.filename || '', configs.path, dest, fileName);
+          const filePath = path.join(configs.path, dest, fileName);
 console.log( 'uploader' , 65 , filePath);
 try {
   fs.existsSync(filePath)
@@ -128,7 +128,7 @@ try {
             }
 
             req.body[fieldName] = path
-              .join("/static", path.relative(path.join(require.main.filename || '', configs.path), req.file.path))
+              .join("/static", path.relative(path.join(configs.path), req.file.path))
               .replaceAll(/\\/g, "/");
           }
 
@@ -143,7 +143,7 @@ try {
           if (req.files && Array.isArray(req.files) && req.files.length) {
             req.body[fieldName] = (req.files as Express.Multer.File[]).map(file =>
               path
-                .join("/static", path.relative(path.join(require.main.filename || '', configs.path), file.path))
+                .join("/static", path.relative(path.join(configs.path), file.path))
                 .replaceAll(/\\/g, "/")
             );
           }
