@@ -1,4 +1,4 @@
-import yup from './../yup.config';
+import yup from 'yup';
 export default function (schema) {
     if(schema.fields){
         const shape = {}
