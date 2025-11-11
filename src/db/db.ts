@@ -61,6 +61,7 @@ const usingMongoDb = (collectionName: string, config: {
   };
   if (config?.path) __path = config.path;
   model = require(path.join(...(config.type == 'external' ? [require.main?.filename|| './' , __path] : ['../model']), collectionName));
+  if(model.default) model =model.default
   const actionHandler = {
     find: (match = {}) => {
       queryState.action = "find";
