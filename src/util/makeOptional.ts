@@ -1,4 +1,4 @@
-import yup from 'yup';
+import * as yup from 'yup';
 export default function (schema :{ [key : string] : any}) {
     if(schema.fields){
         const shape: { [key: string]: any } = {}
