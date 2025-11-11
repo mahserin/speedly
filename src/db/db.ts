@@ -258,6 +258,7 @@ const usingMongoDb = (collectionName: string, config: {
               parseInt(Array.isArray(req.query.limit) ? String(req.query.limit[0]) : typeof req.query.limit === 'string' ? req.query.limit : req.query.limit !== undefined ? String(req.query.limit) : '') ||
               configs.pagination?.quantity ||
               20;
+              console.log('db', 261, model , config.path);
             const totalPages = Math.ceil(
               (await model.countDocuments(match)) / limit
             );
