@@ -4,7 +4,14 @@ import  uploader from './uploader/uploader'
 import  validator from './validator/validator'
 import translation from './model/translation'
 import translationRoute from './modules/translation/translation.routes'
+
+import translator from './util/translator'
+
+const utils = {
+    translator
+}
+
 const models = {translation}
 const modules = {translation : translationRoute}
-export { auth, db, uploader, validator ,models,modules}
+export { auth, db, uploader, validator ,models,modules,utils}
 
