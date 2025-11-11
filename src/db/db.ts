@@ -59,6 +59,7 @@ const usingMongoDb = (collectionName: string, config: {
   let queryState: QueryState = {
     queries: [],
   };
+  
   if (config?.path) __path = config.path;
   model = require(path.join(...(config.type == 'external' ? [require.main?.filename|| './' , __path] : ['../model']), collectionName));
   if(model.default) model =model.default
