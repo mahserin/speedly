@@ -28,7 +28,6 @@ declare global {
   }
 }
 
-console.log( 'uploader' , 15 , configs);
 
 export default (destination : string | ((req : Request ,file : Express.Multer.File) => string) = "/image", config = configs) => {
   let dest : string
@@ -49,7 +48,6 @@ export default (destination : string | ((req : Request ,file : Express.Multer.Fi
 
           splitPath.forEach(folder => {
             currentPath = path.join(currentPath, folder);
-            console.log( 'uploader' , 39 , currentPath , !fs.existsSync(currentPath));
             if (!fs.existsSync(currentPath)) {
               fs.mkdirSync(currentPath);
             }
@@ -72,12 +70,10 @@ export default (destination : string | ((req : Request ,file : Express.Multer.Fi
           const fileName = (configs.prefix ? configs.prefix + "-" : "") +
             originalName.replace(/\.\w+$/, "") + ext;
           const filePath = path.join(configs.path, dest, fileName);
-console.log( 'uploader' , 65 , filePath);
 try {
   fs.existsSync(filePath)
 } catch (error) {
 
-  console.log( 'uploader' , 70 , error);
   
 }
           if (fs.existsSync(filePath)) {
@@ -122,7 +118,6 @@ try {
                 desc: req.body.desc,
                 url: "/static/" + dest + "/" + req.file.filename,
               });
-              console.log( 'uploader' , 101 , mediaDoc)
             
               req.mediaId = mediaDoc.insertedId;
             }
