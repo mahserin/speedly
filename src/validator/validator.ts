@@ -22,9 +22,8 @@ type InferValidation<T extends ValidationSchema> = {
 };
 
 // این تابع validator generic هست
- const validator =
-  <T extends ValidationSchema>(schemas: T): RequestHandler =>
-  async (req: Request, res: Response, next: NextFunction) => {
+const validator = <T extends ValidationSchema>(schemas: T): RequestHandler => {
+  const mw = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (schemas.body) {
         req.body = (await schemas.body.validate(req.body, {
@@ -46,12 +45,17 @@ type InferValidation<T extends ValidationSchema> = {
 
       next();
     } catch (err) {
-        return next({
-          status: 405,
-          json: { message: (err as Error).message },
-          section: "validation",
-        });
-      }
-
+      return next({
+        status: 405,
+        json: { message: (err as Error).message },
+        section: "validation",
+      });
+    }
   };
-export default validator
+
+  Object.defineProperty(mw, "__validationSchema", { value: schemas });
+  Object.defineProperty(mw, "name", { value: `validator` });
+
+  return mw;
+};
+export default validator;

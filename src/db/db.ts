@@ -1,12 +1,12 @@
 let __path = "./models/";
-import path from 'path'
-import strToObj from '../util/strToObj';
-import getConfig from '../util/getConfig';
-import translator from '../util/translator'
-import { Request , Response , NextFunction } from 'express';
+import path from "path";
+import strToObj from "../util/strToObj";
+import getConfig from "../util/getConfig";
+import translator from "../util/translator";
+import { Request, Response, NextFunction } from "express";
 
 // Extend Express Request and Response interfaces to include 'document', 'user', and 'logger'
-declare module 'express-serve-static-core' {
+declare module "express-serve-static-core" {
   interface Request {
     document?: any;
     user?: any; // Add this line to fix the error
@@ -21,7 +21,7 @@ type ConfigsType = {
   dbType?: string;
   path?: string;
   dbEnv?: string;
-  type : 'internal'|'external'
+  type: "internal" | "external";
   pagination?: {
     quantity?: number;
     detailed?: boolean;
@@ -33,104 +33,158 @@ type ConfigsType = {
 let configs: ConfigsType = {
   dbType: "mongodb",
   path: "../models",
-  type :'external',
+  type: "external",
   dbEnv: "DB_URL",
   ...getConfig("db"),
 };
 type QueryState = {
-  action?: string,
-  match?: { [key: string]: unknown } | ((req : Request) => { [key: string]: unknown })
-  body?: { [key: string]: unknown }| ((req : Request) => { [key: string]: unknown })
-  pipeline? : {[key : string] : {[key : string] : unknown}}[] | ((req : Request) => { [key: string]: unknown }[])
+  action?: string;
+  match?:
+    | { [key: string]: unknown }
+    | ((req: Request) => { [key: string]: unknown });
+  body?:
+    | { [key: string]: unknown }
+    | ((req: Request) => { [key: string]: unknown });
+  pipeline?:
+    | { [key: string]: { [key: string]: unknown } }[]
+    | ((req: Request) => { [key: string]: unknown }[]);
   queries: (
-    { type: string, value: unknown } |
-    { $skip: number } |
-    { $facet: unknown } |
-    { $unwind: string } |
-    { $limit: number }
-  )[]
-  id ?: string
-}
-const usingMongoDb = (collectionName: string, config: {
-  message?: string; path?: string, 
-  type? :'internal' | 'external'
-} = {type :'external'}) => {
+    | { type: string; value: unknown }
+    | { $skip: number }
+    | { $facet: unknown }
+    | { $unwind: string }
+    | { $limit: number }
+  )[];
+  id?: string;
+};
+const usingMongoDb = (
+  collectionName: string,
+  config: {
+    message?: string;
+    path?: string;
+    type?: "internal" | "external";
+  } = { type: "external" }
+) => {
   let model;
   let queryState: QueryState = {
     queries: [],
   };
-  
+
   if (config?.path) __path = config.path;
-  model = require(path.join(...(config.type == 'external' ? [require.main?.filename|| './' , __path] : ['../model']), collectionName));
-  if(model.default) model =model.default
+  model = require(path.join(
+    ...(config.type == "external"
+      ? [require.main?.filename || "./", __path]
+      : ["../model"]),
+    collectionName
+  ));
+  if (model.default) model = model.default;
   const actionHandler = {
     find: (match = {}) => {
       queryState.action = "find";
       queryState.match = match;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     create: (body = {}) => {
       queryState.action = "create";
       queryState.body = body;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     updateOne: (match = {}, body = {}) => {
       queryState.action = "updateOne";
       queryState.match = match;
       queryState.body = body;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     updateMany: (match = {}, body = {}) => {
       queryState.action = "updateMany";
       queryState.match = match;
       queryState.body = body;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     deleteOne: (match = {}) => {
       queryState.action = "deleteOne";
       queryState.match = match;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     deleteMany: (match = {}) => {
       queryState.action = "deleteMany";
       queryState.match = match;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     findOne: (match = {}) => {
       queryState.action = "findOne";
       queryState.match = match;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     findOneAndUpdate: (match = {}, body = {}) => {
       queryState.action = "findOneAndUpdate";
       queryState.match = match;
       queryState.body = body;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     aggregate: (pipeline = []) => {
       queryState.action = "aggregate";
       queryState.pipeline = pipeline;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     findOneAndDelete: (match = {}) => {
       queryState.action = "findOneAndDelete";
       queryState.match = match;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     findById: (id = "") => {
       queryState.action = "findById";
       queryState.id = id;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     findByIdAndUpdate: (id = "", body = {}) => {
       queryState.action = "findByIdAndUpdate";
       queryState.id = id;
       queryState.body = body;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
     findByIdAndDelete: (id = "") => {
       queryState.action = "findByIdAndDelete";
       queryState.id = id;
+      Object.defineProperty(handler, "name", {
+        value: `model:${queryState.action}:${collectionName}`,
+      });
       return handler;
     },
   };
@@ -140,10 +194,10 @@ const usingMongoDb = (collectionName: string, config: {
    * @param {object} res - Express response object used to send responses.
    * @param {function} next - Express next middleware function for error handling.
    */
-  const handler = async (req : Request  , res : Response, next : NextFunction) => {
-    let data : any = undefined,
+  const handler = async (req: Request, res: Response, next: NextFunction) => {
+    let data: any = undefined,
       detail = {};
-    let match : {[key : string] : unknown} = {};
+    let match: { [key: string]: unknown } = {};
     let realTimeQueries = [...queryState.queries];
     const { sort, limit, page, select } = req.query;
 
@@ -178,7 +232,7 @@ const usingMongoDb = (collectionName: string, config: {
     {
       if (req.query.sort && queryState.action !== "aggregate") {
         const sortQueryIndex = realTimeQueries.findIndex(
-          (q) => 'type' in q && q.type == "sort"
+          (q) => "type" in q && q.type == "sort"
         );
         const sortStr = Array.isArray(req.query.sort)
           ? req.query.sort[0]
@@ -193,44 +247,79 @@ const usingMongoDb = (collectionName: string, config: {
           realTimeQueries.splice(sortQueryIndex, 1, {
             type: "sort",
             value: {
-              ...((realTimeQueries[sortQueryIndex] && 'value' in realTimeQueries[sortQueryIndex] && typeof realTimeQueries[sortQueryIndex].value === 'object' && realTimeQueries[sortQueryIndex].value !== null) ? realTimeQueries[sortQueryIndex].value : {}),
+              ...(realTimeQueries[sortQueryIndex] &&
+              "value" in realTimeQueries[sortQueryIndex] &&
+              typeof realTimeQueries[sortQueryIndex].value === "object" &&
+              realTimeQueries[sortQueryIndex].value !== null
+                ? realTimeQueries[sortQueryIndex].value
+                : {}),
               ...sortObject,
               _id: 1,
             },
           });
       }
       if (req.query.page && queryState.action !== "aggregate") {
-        const pageStr = Array.isArray(req.query.page) ? req.query.page[0] : typeof req.query.page === 'string' ? req.query.page : '';
-        const limitStr = Array.isArray(req.query.limit) ? req.query.limit[0] : typeof req.query.limit === 'string' ? req.query.limit : '';
-        const pageNum = parseInt(typeof pageStr === 'string' ? pageStr : '') || 1;
-        const limitNum = parseInt(typeof limitStr === 'string' ? limitStr : '') || configs?.pagination?.quantity || 20;
+        const pageStr = Array.isArray(req.query.page)
+          ? req.query.page[0]
+          : typeof req.query.page === "string"
+          ? req.query.page
+          : "";
+        const limitStr = Array.isArray(req.query.limit)
+          ? req.query.limit[0]
+          : typeof req.query.limit === "string"
+          ? req.query.limit
+          : "";
+        const pageNum =
+          parseInt(typeof pageStr === "string" ? pageStr : "") || 1;
+        const limitNum =
+          parseInt(typeof limitStr === "string" ? limitStr : "") ||
+          configs?.pagination?.quantity ||
+          20;
 
-        if (realTimeQueries.findIndex((q) => 'type' in q && q.type == "skip") == -1)
+        if (
+          realTimeQueries.findIndex((q) => "type" in q && q.type == "skip") ==
+          -1
+        )
           realTimeQueries.push({
             type: "skip",
             value: (pageNum - 1) * limitNum,
           });
-        if (realTimeQueries.findIndex((q) => 'type' in q && q.type == "limit") == -1)
+        if (
+          realTimeQueries.findIndex((q) => "type" in q && q.type == "limit") ==
+          -1
+        )
           realTimeQueries.push({
             type: "limit",
             value: limitNum,
           });
       } else if (req.query.limit && queryState.action !== "aggregate") {
-        const pageStrAgg = Array.isArray(req.query.page) ? req.query.page[0] : typeof req.query.page === 'string' ? req.query.page : '';
-        const limitStrAgg = Array.isArray(req.query.limit) ? req.query.limit[0] : typeof req.query.limit === 'string' ? req.query.limit : '';
-        const pageNumAgg = parseInt(typeof pageStrAgg === 'string' ? pageStrAgg : '') || 1;
-        const limitNumAgg = parseInt(typeof limitStrAgg === 'string' ? limitStrAgg : '') || 20;
+        const pageStrAgg = Array.isArray(req.query.page)
+          ? req.query.page[0]
+          : typeof req.query.page === "string"
+          ? req.query.page
+          : "";
+        const limitStrAgg = Array.isArray(req.query.limit)
+          ? req.query.limit[0]
+          : typeof req.query.limit === "string"
+          ? req.query.limit
+          : "";
+        const pageNumAgg =
+          parseInt(typeof pageStrAgg === "string" ? pageStrAgg : "") || 1;
+        const limitNumAgg =
+          parseInt(typeof limitStrAgg === "string" ? limitStrAgg : "") || 20;
         realTimeQueries.push(
           { $skip: (pageNumAgg - 1) * limitNumAgg },
-          { $limit: parseInt(
+          {
+            $limit: parseInt(
               Array.isArray(req.query.limit)
                 ? String(req.query.limit[0])
-                : typeof req.query.limit === 'string'
-                  ? req.query.limit
-                  : req.query.limit !== undefined
-                    ? String(req.query.limit)
-                    : ''
-            ) }
+                : typeof req.query.limit === "string"
+                ? req.query.limit
+                : req.query.limit !== undefined
+                ? String(req.query.limit)
+                : ""
+            ),
+          }
         );
       } else if (req.query.limit && queryState.action == "aggregate") {
         realTimeQueries.push({ $limit: parseInt(String(req.query.limit)) });
@@ -238,7 +327,7 @@ const usingMongoDb = (collectionName: string, config: {
 
       if (req.query.select && queryState.action !== "aggregate") {
         const selectQueryIndex = realTimeQueries.findIndex(
-          (q) => 'type' in q && q.type == "select"
+          (q) => "type" in q && q.type == "select"
         );
         if (selectQueryIndex == -1)
           realTimeQueries.push({ type: "select", value: req.query.select });
@@ -246,21 +335,51 @@ const usingMongoDb = (collectionName: string, config: {
     }
 
     try {
-      const page = parseInt(Array.isArray(req.query.page) ? String(req.query.page[0]) : typeof req.query.page === 'string' ? req.query.page : '') || 1;
+      const page =
+        parseInt(
+          Array.isArray(req.query.page)
+            ? String(req.query.page[0])
+            : typeof req.query.page === "string"
+            ? req.query.page
+            : ""
+        ) || 1;
       const limit =
-        parseInt(Array.isArray(req.query.limit) ? String(req.query.limit[0]) : typeof req.query.limit === 'string' ? req.query.limit : req.query.limit !== undefined ? String(req.query.limit) : '') ||
+        parseInt(
+          Array.isArray(req.query.limit)
+            ? String(req.query.limit[0])
+            : typeof req.query.limit === "string"
+            ? req.query.limit
+            : req.query.limit !== undefined
+            ? String(req.query.limit)
+            : ""
+        ) ||
         configs.pagination?.quantity ||
         20;
 
       switch (queryState.action) {
         case "find":
           if (configs.pagination?.detailed && req.query.page) {
-            const page = parseInt(Array.isArray(req.query.page) ? String(req.query.page[0]) : typeof req.query.page === 'string' ? req.query.page : '') || 1;
+            const page =
+              parseInt(
+                Array.isArray(req.query.page)
+                  ? String(req.query.page[0])
+                  : typeof req.query.page === "string"
+                  ? req.query.page
+                  : ""
+              ) || 1;
             const limit =
-              parseInt(Array.isArray(req.query.limit) ? String(req.query.limit[0]) : typeof req.query.limit === 'string' ? req.query.limit : req.query.limit !== undefined ? String(req.query.limit) : '') ||
+              parseInt(
+                Array.isArray(req.query.limit)
+                  ? String(req.query.limit[0])
+                  : typeof req.query.limit === "string"
+                  ? req.query.limit
+                  : req.query.limit !== undefined
+                  ? String(req.query.limit)
+                  : ""
+              ) ||
               configs.pagination?.quantity ||
               20;
-              console.log('db', 261, model , config.path);
+            console.log("db", 261, model, config.path);
             const totalPages = Math.ceil(
               (await model.countDocuments(match)) / limit
             );
@@ -276,17 +395,17 @@ const usingMongoDb = (collectionName: string, config: {
         case "create":
           req.body = Array.isArray(req.body)
             ? req.body.map((item) => ({
-              ...item,
-              ...(typeof queryState.body == "function"
-                ? queryState.body(req)
-                : queryState.body),
-            }))
+                ...item,
+                ...(typeof queryState.body == "function"
+                  ? queryState.body(req)
+                  : queryState.body),
+              }))
             : {
-              ...req.body,
-              ...(typeof queryState.body == "function"
-                ? queryState.body(req)
-                : queryState.body),
-            };
+                ...req.body,
+                ...(typeof queryState.body == "function"
+                  ? queryState.body(req)
+                  : queryState.body),
+              };
           data = model?.[queryState.action]?.call(model, req.body);
           break;
         case "updateOne":
@@ -355,38 +474,40 @@ const usingMongoDb = (collectionName: string, config: {
                     {
                       $addFields: {
                         totalPages: { $ceil: { $divide: ["$count", limit] } },
-                        page, limit
+                        page,
+                        limit,
                       },
                     },
                     {
-                      $unset: ['_id', 'count']
-                    }
+                      $unset: ["_id", "count"],
+                    },
                   ],
                 },
-              }, {
-                $unwind: '$detail'
-              }
+              },
+              {
+                $unwind: "$detail",
+              },
             ];
           } else {
             realTimeQueries = [
               {
                 $facet: {
                   content: [...realTimeQueries],
-                }
-              }]
+                },
+              },
+            ];
           }
           // res.status(200).json([...queryState.pipeline , ...realTimeQueries])
           if (typeof queryState.pipeline == "function") {
-            data = model?.[queryState.action]?.call(
-              model,
-              [...queryState.pipeline(req), ...realTimeQueries] 
-            );
+            data = model?.[queryState.action]?.call(model, [
+              ...queryState.pipeline(req),
+              ...realTimeQueries,
+            ]);
           } else {
-
-            data = model?.[queryState.action]?.call(
-              model,
-              [...(queryState.pipeline || []), ...realTimeQueries] 
-            );
+            data = model?.[queryState.action]?.call(model, [
+              ...(queryState.pipeline || []),
+              ...realTimeQueries,
+            ]);
           }
           break;
         case "findByIdAndUpdate":
@@ -401,12 +522,21 @@ const usingMongoDb = (collectionName: string, config: {
               ...(typeof queryState.body == "function"
                 ? queryState.body(req)
                 : queryState.body),
-            }).reduce((acc : {$set ? : {[key : string] : unknown},$unset ? : {[key : string] : unknown}}, [key, value]) => {
-              if (value == "$$REMOVE") {
-                return { ...acc, $unset: { ...acc?.$unset, [key]: value } };
-              }
-              return { ...acc, $set: { ...acc?.$set, [key]: value } };
-            }, {} ),
+            }).reduce(
+              (
+                acc: {
+                  $set?: { [key: string]: unknown };
+                  $unset?: { [key: string]: unknown };
+                },
+                [key, value]
+              ) => {
+                if (value == "$$REMOVE") {
+                  return { ...acc, $unset: { ...acc?.$unset, [key]: value } };
+                }
+                return { ...acc, $set: { ...acc?.$set, [key]: value } };
+              },
+              {}
+            ),
             { new: true }
           );
           break;
@@ -419,7 +549,7 @@ const usingMongoDb = (collectionName: string, config: {
       }
       if (queryState.action != "aggregate")
         realTimeQueries.forEach((q) => {
-          if ('type' in q && typeof data?.[q.type] === "function") {
+          if ("type" in q && typeof data?.[q.type] === "function") {
             data = data[q.type].call(data, q.value);
           }
         });
@@ -434,88 +564,111 @@ const usingMongoDb = (collectionName: string, config: {
         });
       } else {
         if (res.logger && req.user) {
-          if (queryState.action && queryState.action.match(/create|update|delete/i)?.[0]) {
+          if (
+            queryState.action &&
+            queryState.action.match(/create|update|delete/i)?.[0]
+          ) {
             res.logger(
-              `${{ log: "لاگ‌ها" }[collectionName] ||
-              (await translator(`${collectionName}`))
-              } ${data.name || data.title || data.id || data._id || ""
-              } توسط ${(req.user?.firstName ? req.user?.firstName + " " : "") +
-              (req.user?.lastName || "") ||
-              `ادمین با شماره ${req.user.phoneNumber}`
-              } ${{ create: "ایجاد", update: "بروزرسانی", delete: "حذف" ,nothing : ''}[
-              queryState.action
-                .match(/create|update|delete/i)?.[0]
-                ?.toLowerCase() || 'nothing'
-              ] || queryState.action 
+              `${
+                { log: "لاگ‌ها" }[collectionName] ||
+                (await translator(`${collectionName}`))
+              } ${data.name || data.title || data.id || data._id || ""} توسط ${
+                (req.user?.firstName ? req.user?.firstName + " " : "") +
+                  (req.user?.lastName || "") ||
+                `ادمین با شماره ${req.user.phoneNumber}`
+              } ${
+                {
+                  create: "ایجاد",
+                  update: "بروزرسانی",
+                  delete: "حذف",
+                  nothing: "",
+                }[
+                  queryState.action
+                    .match(/create|update|delete/i)?.[0]
+                    ?.toLowerCase() || "nothing"
+                ] || queryState.action
               } شد`,
               queryState.action.match(/update/i)?.[0]
                 ? (
-                  await Promise.all(
-                    Object.entries(data._doc)
-                      .filter(([key, value]) =>
-                        ["_id", "__v", "updatedAt"].includes(key)
-                          ? false
-                          : req.document._doc[key] == undefined ||
-                          req.document._doc[key]?.toString?.() !==
-                          value?.toString?.()
-                      )
-                      .map(async (item) => {
-                        const translatedField = await translator(
-                          item[0],
-                          "fa"
-                        );
-                        if (req.document[item[0]] == undefined) {
-                          return `فیلد ${translatedField} اضافه شد`;
-                        } else {
-                          return `فیلد ${translatedField} از ${req.document[item[0]]
+                    await Promise.all(
+                      Object.entries(data._doc)
+                        .filter(([key, value]) =>
+                          ["_id", "__v", "updatedAt"].includes(key)
+                            ? false
+                            : req.document._doc[key] == undefined ||
+                              req.document._doc[key]?.toString?.() !==
+                                value?.toString?.()
+                        )
+                        .map(async (item) => {
+                          const translatedField = await translator(
+                            item[0],
+                            "fa"
+                          );
+                          if (req.document[item[0]] == undefined) {
+                            return `فیلد ${translatedField} اضافه شد`;
+                          } else {
+                            return `فیلد ${translatedField} از ${
+                              req.document[item[0]]
                             } به ${item[1]} تغییر یافت`;
-                        }
-                      })
+                          }
+                        })
+                    )
+                  ).concat(
+                    await Promise.all(
+                      Object.entries(req.document._doc)
+                        .filter(([key, value]) =>
+                          ["_id", "__v", "updatedAt"].includes(key)
+                            ? false
+                            : data._doc[key] == undefined
+                        )
+                        .map(async (item) => {
+                          const translatedField = await translator(
+                            item[0],
+                            "fa"
+                          );
+                          return `فیلد ${translatedField} حذف شد`;
+                        })
+                    )
                   )
-                ).concat(
-                  await Promise.all(
-                    Object.entries(req.document._doc)
-                      .filter(([key, value]) =>
-                        ["_id", "__v", "updatedAt"].includes(key)
-                          ? false
-                          : data._doc[key] == undefined
-                      )
-                      .map(async (item) => {
-                        const translatedField = await translator(
-                          item[0],
-                          "fa"
-                        );
-                        return `فیلد ${translatedField} حذف شد`;
-                      })
-                  )
-                )
                 : []
             );
           }
         }
         const action =
           queryState.action?.match(/create|update|delet/i)?.[0] || "find";
-          const resBody  = queryState.action == 'aggregate' ? {
-          message:
-            config?.message ||
-            `the ${collectionName} was found successfully`, content: [], ...data[0]
-        } : {
-          content: data,
-          ...{ detail: Object.keys(detail).length ? detail : undefined },
-          message:
-            config?.message ||
-            `the ${collectionName} was ${action == "find" ? "found" : action + "ed"
-            }`,
-        }
-        res.success ? res.success(200, resBody) : res.status(200).json(resBody)
+        const resBody =
+          queryState.action == "aggregate"
+            ? {
+                message:
+                  config?.message ||
+                  `the ${collectionName} was found successfully`,
+                content: [],
+                ...data[0],
+              }
+            : {
+                content: data,
+                ...{ detail: Object.keys(detail).length ? detail : undefined },
+                message:
+                  config?.message ||
+                  `the ${collectionName} was ${
+                    action == "find" ? "found" : action + "ed"
+                  }`,
+              };
+        res.success ? res.success(200, resBody) : res.status(200).json(resBody);
       }
     } catch (err) {
-      if (err && typeof err === 'object' && 'errorResponse' in err && (err as any).errorResponse?.code == 11000)
+      if (
+        err &&
+        typeof err === "object" &&
+        "errorResponse" in err &&
+        (err as any).errorResponse?.code == 11000
+      )
         return next({
           status: 405,
           json: {
-            message: `(${Object.entries((err as any).errorResponse.keyValue)[0][0]
-              }) already exists; write a unique value`,
+            message: `(${
+              Object.entries((err as any).errorResponse.keyValue)[0][0]
+            }) already exists; write a unique value`,
           },
         });
       console.error("Error : model", err);
@@ -527,7 +680,7 @@ const usingMongoDb = (collectionName: string, config: {
       });
     }
   };
-  handler.select = (value : string | {[key : string] : -1 |1} ) => {
+  handler.select = (value: string | { [key: string]: -1 | 1 }) => {
     queryState.queries.push({
       type: "select",
       value: typeof value == "string" ? strToObj(value, 0) : value,
@@ -535,22 +688,22 @@ const usingMongoDb = (collectionName: string, config: {
     return handler;
   };
 
-  handler.sort = (value : string | {[key : string] : -1 | 1}) => {
+  handler.sort = (value: string | { [key: string]: -1 | 1 }) => {
     queryState.queries.push({
       type: "sort",
       value: typeof value == "string" ? strToObj(value) : value,
     });
     return handler;
   };
-  handler.skip = (value : number) => {
+  handler.skip = (value: number) => {
     queryState.queries.push({ type: "skip", value });
     return handler;
   };
-  handler.limit = (value : number) => {
+  handler.limit = (value: number) => {
     queryState.queries.push({ type: "limit", value });
     return handler;
   };
-  handler.populate = (value: string | object | (string|object)[] ) => {
+  handler.populate = (value: string | object | (string | object)[]) => {
     queryState.queries.push({ type: "populate", value });
     return handler;
   };
@@ -583,12 +736,12 @@ const usingMongoDb = (collectionName: string, config: {
 
 //   return chainActions;
 // };
-const db = (collectionName : string, config = configs) => {
-  let generatedConfig : ConfigsType= {
+const db = (collectionName: string, config = configs) => {
+  let generatedConfig: ConfigsType = {
     dbType: "mongodb",
     path: "../models",
     dbEnv: "DB_URL",
-    type :'external',
+    type: "external",
     ...getConfig("db"),
   };
   Object.entries(config).forEach(([key, value]) => {
@@ -598,7 +751,7 @@ const db = (collectionName : string, config = configs) => {
     case "mongodb":
       return usingMongoDb(collectionName, generatedConfig);
     case "mysql":
-      // return usingMySql(collectionName, generatedConfig);
+    // return usingMySql(collectionName, generatedConfig);
   }
 };
 

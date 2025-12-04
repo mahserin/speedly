@@ -10,11 +10,17 @@ const gConfig = {
   },
   ...getConfig("auth"),
 };
-const executer: Types.Executer = (authType) => async (req, res, next) => {
- const accessResult = await gConfig?.customValidator?.(req, authType);
- if(accessResult == null) return next({status : 401,json : {message : 'Unauthorized'}});
- if(!accessResult) return next({status : 403,json : {message : 'Forbidden'}})
+const executer: Types.Executer = (authType) => {
+  const mw = async (req: Request, res: Response, next: NextFunction) => {
+    const accessResult = await gConfig?.customValidator?.(req, authType);
+    if (accessResult == null)
+      return next({ status: 401, json: { message: "Unauthorized" } });
+    if (!accessResult)
+      return next({ status: 403, json: { message: "Forbidden" } });
     return next();
+  };
+  Object.defineProperty(mw, "name", { value: `auth:${authType}` });
+  return mw;
 };
 
 const auth: Types.Auth = {
@@ -22,7 +28,9 @@ const auth: Types.Auth = {
     return executer("user");
   },
   admin: (config) => {
-    return executer(`admin${config?.permission ? `:${config.permission}` : ''}`);
+    return executer(
+      `admin${config?.permission ? `:${config.permission}` : ""}`
+    );
   },
   any: () => {
     return executer("any");
