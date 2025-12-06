@@ -5,6 +5,7 @@ import validator from "./validator/validator";
 import translation from "./model/translation";
 import translationRoute from "./modules/translation/translation.routes";
 import document from "./document/document";
+
 import translator from "./util/translator";
 
 const utils = {
