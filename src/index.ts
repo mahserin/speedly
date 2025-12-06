@@ -1,17 +1,16 @@
-import auth from './auth/auth'
-import  db from './db/db'
-import  uploader from './uploader/uploader'
-import  validator from './validator/validator'
-import translation from './model/translation'
-import translationRoute from './modules/translation/translation.routes'
-
-import translator from './util/translator'
+import auth from "./auth/auth";
+import db from "./db/db";
+import uploader from "./uploader/uploader";
+import validator from "./validator/validator";
+import translation from "./model/translation";
+import translationRoute from "./modules/translation/translation.routes";
+import document from "./document/document";
+import translator from "./util/translator";
 
 const utils = {
-    translator
-}
+  translator,
+};
 
-const models = {translation}
-const modules = {translation : translationRoute}
-export { auth, db, uploader, validator ,models,modules,utils}
-
+const models = { translation };
+const modules = { translation: translationRoute };
+export { auth, db, uploader, validator, models, modules, utils, document };
