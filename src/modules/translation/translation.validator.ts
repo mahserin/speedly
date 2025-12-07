@@ -1,17 +1,19 @@
-import makeOptional from '../../util/makeOptional';
-import  { string, object,array, lazy } from 'yup';
+import makeOptional from "../../util/makeOptional";
+import { string, object, array, lazy } from "yup";
 const paramId = object({
-  id: string().required('id is required').matches(/^[0-9a-fA-F]{24}$/, 'id is invalid')
-})
+  id: string()
+    .required("id is required")
+    .matches(/^[0-9a-fA-F]{24}$/, "id is invalid"),
+});
 
 const schema = object({
-    translatedText : string().required('translatedText is required'),
-})
+  translatedText: string().required("translatedText is required"),
+});
 
 //? exports
 
-const put ={
+const put = {
   params: paramId,
-  body : makeOptional(schema)
-}
-export {put}
+  body: makeOptional(schema),
+};
+export { put };
