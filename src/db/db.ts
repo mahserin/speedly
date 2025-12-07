@@ -3,6 +3,7 @@ import path from "path";
 import strToObj from "../util/strToObj";
 import getConfig from "../util/getConfig";
 import translator from "../util/translator";
+import { createUpdateObject } from "./utils";
 import { Request, Response, NextFunction } from "express";
 
 // Extend Express Request and Response interfaces to include 'document', 'user', and 'logger'
@@ -438,14 +439,7 @@ const usingMongoDb = (
           data = model?.[queryState.action]?.call(
             model,
             match,
-            {
-              $set: {
-                ...req.body,
-                ...(typeof queryState.body == "function"
-                  ? queryState.body(req)
-                  : queryState.body),
-              },
-            },
+            createUpdateObject(req, queryState.body || {}),
             { new: true }
           );
           break;
