@@ -656,7 +656,7 @@ const usingMongoDb = (
               };
         res.success ? res.success(200, resBody) : res.status(200).json(resBody);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       if (
         err &&
         typeof err === "object" &&
@@ -675,7 +675,9 @@ const usingMongoDb = (
       return next({
         status: 500,
         json: {
-          message: "Internal Server Error",
+          message:
+            (err instanceof Error ? err.message : String(err)) ||
+            "internal server error",
         },
       });
     }
