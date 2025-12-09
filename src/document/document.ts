@@ -161,6 +161,55 @@ function routeAnalyzer(route: any, routerName: string): RouteInfo {
         }
       }
 
+      // Response
+      doc.responses = {
+        "200": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  message: { type: "string", example: "find successfully" },
+                  content: {
+                    oneOf: [
+                      {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string" },
+                            name: { type: "string" },
+                          },
+                        },
+                      },
+                      {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          name: { type: "string" },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+        "400": {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  message: { type: "string", example: "module not found" },
+                },
+              },
+            },
+          },
+        },
+      };
+
       // Auth
       const auth = getAuthStatus(detail.middlewares);
       if (auth.type === "required") {
