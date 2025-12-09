@@ -1,280 +1,171 @@
-# Speedly
+**Overview**
 
-A powerful Node.js/TypeScript utility library that provides essential modules for rapid web application development, including authentication, database operations, file uploading, validation, and translation services.
+- **Project**: `speedly` — a lightweight express utility framework that bundles auth middlewares, database model handlers, file uploader helpers, request validators, API documentation loader and small utilities to speed up building REST APIs.
+- **Entry point exports**: `auth`, `db`, `uploader`, `validator`, `models`, `modules`, `utils`, `document` (see below for details and examples).
 
-## Features
+**Quick Start**
 
-- 🔐 **Authentication System** - JWT-based authentication with role-based access control
-- 🗄️ **Database Management** - MongoDB/Mongoose integration with advanced query building
-- 📤 **File Upload Handler** - Multer-based file upload with automatic directory management
-- ✅ **Request Validation** - Yup-based schema validation for requests
-- 🌐 **Translation Service** - Multi-provider translation with caching support
-- 📦 **Dual Module Support** - Both CommonJS and ES Module exports
+- **Install**: add the project to your workspace or import the package in your service.
+- **Basic server skeleton**:
 
-## Installation
+```
+import express from 'express'
+import { auth, db, uploader, validator, models, modules, utils, document } from './src'
 
-```bash
-npm install speedly
+const app = express();
+app.use(express.json());
+
+// Mount example module router
+app.use('/api/translation', modules.translation);
+
+// Swagger docs (served at /docs)
+document(app, require('path').join(process.cwd(), 'src/modules'));
+
+app.listen(3000);
 ```
 
-## Quick Start
+**Exports Reference**
 
-```typescript
-import { auth, db, uploader, validator } from 'speedly';
+**`auth`**
 
-// Initialize your Express app with Speedly modules
+- **Type**: default export (object)
+- **Purpose**: Provides simple express middlewares for access control. Each function returns an Express middleware that inspects the request using a configurable `customValidator` (from `getConfig('auth')`) and either allows, forbids or rejects the request.
+- **API**:
+  - `auth.user()` → middleware that enforces a `user` access type.
+  - `auth.admin(config?)` → middleware for admin access. Optionally pass `{ permission }` to require a specific admin permission (the middleware names themselves include the permission, e.g. `auth:admin:PERM`).
+  - `auth.any()` → middleware that accepts any authenticated-type logic configured by the `customValidator`.
+- **Notes**: `auth` reads default options from `getConfig('auth')`. The `customValidator` should return truthy to allow or falsy to forbid; `null` is treated as unauthorized.
+
+**`db`**
+
+- **Type**: default export (factory function)
+- **Purpose**: Creates Express middlewares that operate on a Mongoose model (or other model loaded from the `models` path). Designed to simplify CRUD endpoints by composing handler builders like `.find()`, `.create()`, `.findByIdAndUpdate()`, etc.
+- **How to use**: call `db(collectionName, config?)` to get a model handler factory, then chain action methods and use the returned function as an Express middleware.
+- **Common methods returned by `db('collection')`**:
+  - `.find(match = {})`
+  - `.create(body = {})`
+  - `.updateOne(match, body)`
+  - `.updateMany(match, body)`
+  - `.deleteOne(match)`
+  - `.deleteMany(match)`
+  - `.findOne(match)`
+  - `.findOneAndUpdate(match, body)`
+  - `.aggregate(pipeline)`
+  - `.findById(id)`
+  - `.findByIdAndUpdate(id, body)`
+  - `.findByIdAndDelete(id)`
+- **Query behavior**: The produced middleware reads query params like `search`, `filters`, `sort`, `page`, `limit`, and `select` to modify results. Pagination behaviour can be controlled via `getConfig('db')` (e.g., `pagination.quantity`, `pagination.detailed`).
+- **Config**: second argument allows overriding `{ path, type: 'internal'|'external', message }`. When `type` is `internal` the loader resolves models relative to the library; when `external` it resolves from the host app and `configs.path`.
+- **Example**:
+
+```
+// GET /api/translation -> finds translations
+app.get('/api/translation', db('translation', { type: 'internal' }).find());
+
+// POST /api/translation -> create translation documents
+app.post('/api/translation', db('translation', { type: 'internal' }).create());
 ```
 
-## Modules
+**`uploader`**
 
-### 🔐 Authentication (`auth`)
+- **Type**: default export (factory)
+- **Purpose**: Provides file uploading middlewares built on `multer` and convenience helpers that optionally save media metadata to a `media` collection.
+- **Signature**: `uploader(destination = '/image', config?)` returns an object with methods `{ single, array, fields, any, none }` which are wrappers around multer handlers.
+- **Config options** (defaults obtained from `getConfig('uploader')`):
+  - `saveInDb` (boolean) — whether to persist metadata in a `media` collection
+  - `prefix` (string) — prefix for saved filenames
+  - `limit` (number) — max upload size in MB
+  - `format` (RegExp) — allowed file extensions
+  - `path` (string) — base path to save files (default `../../../public` in library defaults)
+- **Returned helpers**:
+  - `single(fieldName)` — middleware saving a single file and setting the file URL into `req.body[fieldName]`. If `saveInDb` is true it will store a doc in `media` and set `req.mediaId`.
+  - `array(fieldName, maxCount)` — accept multiple files and set an array of URLs into `req.body[fieldName]`.
+  - `fields(fieldsArray)` — accept mixed fields (multer-style field definitions).
+  - `any()` and `none()` — passthrough multer helpers.
+- **Example**:
 
-Provides JWT-based authentication with customizable role management and middleware support.
-
-```typescript
-import { auth } from 'speedly';
-
-// Configure authentication
-const authConfig = {
-  admin: { 
-    role: 'ADMIN', 
-    model: '../models/admin' 
-  },
-  jwtSecretEnv: 'JWT_KEY',
-  customValidator: (req, key) => {
-    // Custom validation logic
-    return true;
-  }
-};
-
-const authMiddleware = auth(authConfig);
-
-// Use in Express routes
-app.use('/admin', authMiddleware.useAuth);
 ```
-
-### 🗄️ Database (`db`)
-
-Advanced MongoDB operations with query building, pagination, and pipeline support.
-
-```typescript
-import { db } from 'speedly';
-
-// Configure database
-const dbConfig = {
-  dbType: "mongodb",
-  path: "../models",
-  dbEnv: "DB_URL",
-  pagination: {
-    quantity: 10,
-    detailed: true
-  }
-};
-
-// Use database operations
-// Supports complex queries, aggregation pipelines, and automatic pagination
-```
-
-### 📤 File Upload (`uploader`)
-
-Multer-based file upload system with automatic directory creation and validation.
-
-```typescript
-import { uploader } from 'speedly';
-
-// Configure uploader
-const uploadConfig = {
-  saveInDb: false,
-  prefix: "img_",
-  limit: 5,
-  format: /png|jpg|webp|jpeg/i
-};
-
-const upload = uploader("/uploads/images", uploadConfig);
-
-// Use in Express routes
-app.post('/upload', upload.single('file'), (req, res) => {
-  // File uploaded successfully
-  res.json({ mediaId: req.mediaId });
+app.post('/upload', uploader('/images').single('photo'), (req,res) => {
+	res.json({ url: req.body.photo });
 });
 ```
 
-### ✅ Validation (`validator`)
+**`validator`**
 
-Type-safe request validation using Yup schemas.
+- **Type**: default export (generic factory)
+- **Purpose**: A small wrapper around `yup` to validate `req.body`, `req.params`, and `req.query`. On failure it forwards an error object to `next()` with `status: 405` and a message.
+- **Signature**: `validator({ body?: yup.Schema, params?: yup.Schema, query?: yup.Schema })` returns an Express `RequestHandler`.
+- **Behavior**: strips unknown fields, assigns validated values back to `req.body`, `req.params`, and `req.query`. The created middleware is annotated with `__validationSchema` (used by automatic documentation generator).
+- **Example**:
 
-```typescript
-import { validator } from 'speedly';
+```
 import * as yup from 'yup';
-
-// Define validation schema
-const userSchema = {
-  body: yup.object({
-    name: yup.string().required(),
-    email: yup.string().email().required(),
-    age: yup.number().min(18)
-  }),
-  params: yup.object({
-    id: yup.string().required()
-  }),
-  query: yup.object({
-    page: yup.number().default(1)
-  })
-};
-
-// Use validation middleware
-app.post('/users/:id', validator(userSchema), (req, res) => {
-  // req.body, req.params, req.query are now validated and typed
-});
+const schema = { body: yup.object({ text: yup.string().required() }) };
+app.post('/translate', validator(schema), handler);
 ```
 
-## Configuration
+**`models`**
 
-Speedly uses a configuration system that allows you to customize each module. Create configuration files or use environment variables:
+- **Type**: object containing Mongoose models
+- **Currently included**:
+  - `translation` — Mongoose model with fields `{ text: String, lang: String, translatedText: String }` and timestamps.
+- **Purpose**: Direct access to low-level models for custom operations (e.g., prefetch, caching or complex queries).
 
-### Environment Variables
+**`modules`**
 
-```bash
-# Database
-DB_URL=mongodb://localhost:27017/myapp
+- **Type**: object of `express.Router` instances keyed by module name
+- **Included**:
+  - `translation` — router defined in `src/modules/translation/translation.routes.ts` with routes:
+    - `GET /` → `db('translation', {type:'internal'}).find()`
+    - `POST /` → guarded by a simple body `auth` check inside the route and then `create()`
+    - `PUT /:id` → `auth.admin()` + `validator(...)` + `findByIdAndUpdate()`
+- **Mounting**: `app.use('/api/translation', modules.translation)`
 
-# JWT Secret
-JWT_KEY=your-secret-key
+**`utils`**
 
-# Translation API (optional)
-ONE_API_TOKEN=your-translation-api-token
-```
+- **Type**: object of helper utilities
+- **Included**:
+  - `translator` — a small translation helper that attempts multiple external translation providers and caches successful translations to the `translation` model. Signature: `translator(text = 'unspecified text', lang = 'fa') => Promise<string>`.
+- **Behavior**: Normalizes text, looks up local cache (`translation` model), attempts external services (a worker proxy and optionally `one-api`), writes the result to DB, and returns the translated text. Falls back to the formatted original text on failure.
 
-### Configuration Files
+**`document`**
 
-Create module-specific configuration by using the `getConfig` utility:
+- **Type**: default export (function)
+- **Purpose**: Scans `src/modules` routers and mounts a Swagger UI at `/docs` with automatically generated OpenAPI paths and basic security scheme.
+- **Signature**: `document(app: Express, baseDir?: string)` — `baseDir` defaults to `path.join(process.cwd(), 'src/module')` in the loader. Use a correct path to your modules folder (e.g., `path.join(process.cwd(), 'src/modules')`).
+- **What it detects**: routes, http methods, `yup` validation schemas (to document request bodies), and auth middlewares (to add security hints and descriptions).
 
-```typescript
-// Example configuration structure
-const config = {
-  auth: {
-    jwtSecretEnv: 'JWT_KEY',
-    admin: { role: 'ADMIN' }
-  },
-  db: {
-    dbType: 'mongodb',
-    pagination: { quantity: 20 }
-  },
-  uploader: {
-    limit: 10,
-    format: /png|jpg|jpeg|webp|gif/i
-  },
-  translate: {
-    one_api_token: process.env.ONE_API_TOKEN
-  }
-};
-```
+**Configuration & Environment**
 
-## Advanced Usage
+- Use `getConfig(key)` (internal) to supply runtime options for `auth`, `db`, `uploader`, and `translate` providers. Typical environment keys used by the modules:
+  - `JWT_KEY` (used by auth-related configs)
+  - `DB_URL` (database connection string if using external db config)
+  - `one_api_token` (optional token for the alternate translator provider)
 
-### Database Queries with Pipelines
+**Examples**
 
-```typescript
-// Complex aggregation pipeline example
-const queryState = {
-  action: 'aggregate',
-  match: { status: 'active' },
-  pipeline: [
-    { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', as: 'user' } },
-    { $unwind: '$user' },
-    { $sort: { createdAt: -1 } }
-  ]
-};
-```
-
-### Translation with Caching
-
-The translation module automatically caches translations and supports multiple providers:
-
-```typescript
-import { translator } from 'speedly/dist/util/translator';
-
-// Translate text with automatic caching
-const translatedText = await translator("Hello World", "fa");
-```
-
-## API Reference
-
-### Authentication Module
-
-- `auth(config)` - Creates authentication middleware
-- `useAuth` - Express middleware for route protection
-
-### Database Module
-
-- Supports MongoDB operations with Mongoose
-- Built-in pagination and query building
-- Aggregation pipeline support
-
-### Uploader Module
-
-- `uploader(destination, config)` - Creates multer upload middleware
-- Automatic directory creation
-- File format validation
-
-### Validator Module
-
-- `validator(schemas)` - Creates validation middleware
-- Type-safe validation with Yup
-- Supports body, params, and query validation
-
-## Dependencies
-
-- **Express.js** - Web framework
-- **Mongoose** - MongoDB object modeling
-- **Multer** - File upload handling
-- **Yup** - Schema validation
-- **jsonwebtoken** - JWT authentication
-- **axios** - HTTP client
-- **translate** - Translation services
-
-## Development
-
-### Building the Project
-
-```bash
-# Build both CommonJS and ES modules
-npm run build
-
-# Build CommonJS only
-npm run build:cjs
-
-# Build ES modules only
-npm run build:esm
-
-# Development mode
-npm run dev
-```
-
-### Project Structure
+- Mounting everything in a small app:
 
 ```
-src/
-├── auth/          # Authentication module
-├── db/            # Database operations
-├── uploader/      # File upload handling
-├── validator/     # Request validation
-├── util/          # Utility functions
-└── model/         # Data models
+import express from 'express';
+import { modules, document } from './src';
+import path from 'path';
+
+const app = express();
+app.use(express.json());
+app.use('/api/translation', modules.translation);
+document(app, path.join(process.cwd(), 'src/modules'));
+app.listen(3000);
 ```
 
-## TypeScript Support
+**Developer Notes**
 
-Speedly is written in TypeScript and provides full type definitions. The package exports both CommonJS and ES modules for maximum compatibility.
+- `db` middleware attaches pagination, `search` and `filters` behavior using `req.query`. Use `type: 'internal'` when you want the model path resolved inside the package, or `external` to resolve from the consumer app.
+- `validator` attaches `__validationSchema` to middlewares which `document` uses to generate OpenAPI schemas.
+- `uploader` writes files to disk under the configured `path` and returns public URLs prefixed with `/static`.
 
-## License
+If you'd like, I can also:
 
-MIT © MAHSERIN
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Support
-
-For questions and support, please open an issue on the GitHub repository.
+- add usage examples/tests around each exported function
+- add API reference tables per-method for `db` handlers
+- generate a small example express app under `examples/` using these exports
