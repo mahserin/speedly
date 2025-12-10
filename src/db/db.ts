@@ -22,6 +22,7 @@ type ConfigsType = {
   dbType?: string;
   path?: string;
   dbEnv?: string;
+  response?:boolean
   type: "internal" | "external";
   pagination?: {
     quantity?: number;
@@ -36,6 +37,7 @@ let configs: ConfigsType = {
   path: "../models",
   type: "external",
   dbEnv: "DB_URL",
+  response:true,
   ...getConfig("db"),
 };
 type QueryState = {
@@ -64,6 +66,7 @@ const usingMongoDb = (
     message?: string;
     path?: string;
     type?: "internal" | "external";
+    response?: boolean;
   } = { type: "external" }
 ) => {
   let model;
@@ -628,7 +631,7 @@ const usingMongoDb = (
             );
           }
         }
-        const action =
+        if(config?.response){const action =
           queryState.action?.match(/create|update|delet/i)?.[0] || "find";
         const resBody =
           queryState.action == "aggregate"
@@ -649,7 +652,10 @@ const usingMongoDb = (
                   }`,
               };
         res.success ? res.success(200, resBody) : res.status(200).json(resBody);
+      }else {
+        next();
       }
+    }
     } catch (err: unknown) {
       if (
         err &&
@@ -738,6 +744,7 @@ const db = (collectionName: string, config = configs) => {
     path: "../models",
     dbEnv: "DB_URL",
     type: "external",
+    response:true,
     ...getConfig("db"),
   };
   Object.entries(config).forEach(([key, value]) => {
