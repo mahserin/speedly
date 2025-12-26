@@ -13,3 +13,5 @@ export {
 
 // Override the  default  express() with our speedly`s  functions
 export default speedly;
+module.exports = speedly;
+module.exports.default = speedly;
