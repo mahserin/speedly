@@ -10,6 +10,7 @@ type InitConfig = {
   [key: string]: any;
 };
 
+export type InitFunction = (config?: InitConfig) => express.Express;
 const defaultConfig: InitConfig = {
   notFoundHandler: true,
   errorHandler: true,
@@ -18,7 +19,7 @@ const defaultConfig: InitConfig = {
   cookieParser: true,
   staticFiles: true,
 };
-
+export type { InitConfig };
 export default function speedly(config: InitConfig = {}) {
   const finalConfig = { ...defaultConfig, ...config };
   const app = express();
