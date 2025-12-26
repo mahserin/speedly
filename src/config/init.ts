@@ -40,7 +40,7 @@ export default function speedly(config: InitConfig = {}) {
     } catch (error: any) {
       if (error.code === "MODULE_NOT_FOUND") {
         console.warn(
-          "cookie-parser module not found. Please install it to use cookieParser middleware."
+          "cookie-parser module not found. Please reinstall it to use cookieParser middleware."
         );
       }
     }
