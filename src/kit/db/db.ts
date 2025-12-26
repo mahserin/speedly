@@ -22,6 +22,8 @@ type ConfigsType = {
   dbType?: string;
   path?: string;
   dbEnv?: string;
+  response?: boolean;
+  first?: boolean;
   type: "internal" | "external";
   pagination?: {
     quantity?: number;
@@ -36,6 +38,8 @@ let configs: ConfigsType = {
   path: "../models",
   type: "external",
   dbEnv: "DB_URL",
+  first: false,
+  response: true,
   ...getConfig("db"),
 };
 type QueryState = {
@@ -63,7 +67,9 @@ const usingMongoDb = (
   config: {
     message?: string;
     path?: string;
+      first?: boolean;
     type?: "internal" | "external";
+    response?: boolean;
   } = { type: "external" }
 ) => {
   let model;
@@ -628,27 +634,36 @@ const usingMongoDb = (
             );
           }
         }
-        const action =
-          queryState.action?.match(/create|update|delet/i)?.[0] || "find";
-        const resBody =
-          queryState.action == "aggregate"
-            ? {
-                message:
-                  config?.message ||
-                  `the ${collectionName} was found successfully`,
-                content: [],
-                ...data[0],
-              }
-            : {
-                content: data,
-                ...{ detail: Object.keys(detail).length ? detail : undefined },
-                message:
-                  config?.message ||
-                  `the ${collectionName} was ${
-                    action == "find" ? "found" : action + "ed"
-                  }`,
-              };
-        res.success ? res.success(200, resBody) : res.status(200).json(resBody);
+        if (config?.response) {
+          const action =
+            queryState.action?.match(/create|update|delet/i)?.[0] || "find";
+            if(queryState.action == "aggregate"&& config.first && data[0]?.content.length) data[0].content.length = data[0].content[0]
+          const resBody =
+            queryState.action == "aggregate"
+              ? {
+                  message:
+                    config?.message ||
+                    `the ${collectionName} was found successfully`,
+                  content: [],
+                  ...data[0],
+                }
+              : {
+                  content: data,
+                  ...{
+                    detail: Object.keys(detail).length ? detail : undefined,
+                  },
+                  message:
+                    config?.message ||
+                    `the ${collectionName} was ${
+                      action == "find" ? "found" : action + "ed"
+                    }`,
+                };
+          res.success
+            ? res.success(200, resBody)
+            : res.status(200).json(resBody);
+        } else {
+          next();
+        }
       }
     } catch (err: unknown) {
       if (
@@ -738,6 +753,8 @@ const db = (collectionName: string, config = configs) => {
     path: "../models",
     dbEnv: "DB_URL",
     type: "external",
+    first: false,
+    response: true,
     ...getConfig("db"),
   };
   Object.entries(config).forEach(([key, value]) => {
