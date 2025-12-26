@@ -1,17 +1,15 @@
-import auth from "./auth/auth";
-import db from "./db/db";
-import uploader from "./uploader/uploader";
-import validator from "./validator/validator";
-import translation from "./model/translation";
-import translationRoute from "./modules/translation/translation.routes";
-import document from "./document/document";
+import speedly from "./config/init";
 
-import translator from "./util/translator";
+// Export express types and classes
+export {
+  Request,
+  Response,
+  NextFunction,
+  Application,
+  Router,
+  RequestHandler,
+  ErrorRequestHandler,
+} from "express";
 
-const utils = {
-  translator,
-};
-
-const models = { translation };
-const modules = { translation: translationRoute };
-export { auth, db, uploader, validator, models, modules, utils, document };
+// Override the default express() with our speedly function
+export default speedly;

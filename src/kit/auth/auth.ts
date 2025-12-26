@@ -1,6 +1,6 @@
 import * as Types from "./types";
 
-import getConfig from "../util/getConfig";
+import getConfig from "../../util/getConfig";
 import e, { Request, Response, NextFunction } from "express";
 const gConfig = {
   admin: { role: "ADMIN", model: "../models/admin" },

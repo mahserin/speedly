@@ -1,8 +1,8 @@
 let __path = "./models/";
 import path from "path";
-import strToObj from "../util/strToObj";
-import getConfig from "../util/getConfig";
-import translator from "../util/translator";
+import strToObj from "../../util/strToObj";
+import getConfig from "../../util/getConfig";
+import translator from "../../util/translator";
 import { createUpdateObject } from "./utils";
 import { Request, Response, NextFunction } from "express";
 
