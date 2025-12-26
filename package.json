@@ -8,6 +8,26 @@
     ".": {
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
+    },
+    "./kit": {
+      "import": "./dist/esm/kit/index.js",
+      "require": "./dist/cjs/kit/index.js"
+    },
+    "./util": {
+      "import": "./dist/esm/util/index.js",
+      "require": "./dist/cjs/util/index.js"
+    },
+    "./modules/": {
+      "import": "./dist/esm/modules/index.js",
+      "require": "./dist/cjs/modules/index.js"
+    },
+    "./document/": {
+      "import": "./dist/esm/document/index.js",
+      "require": "./dist/cjs/document/index.js"
+    },
+    "./model/": {
+      "import": "./dist/esm/model/index.js",
+      "require": "./dist/cjs/model/index.js"
     }
   },
   "scripts": {
