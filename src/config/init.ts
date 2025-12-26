@@ -45,6 +45,11 @@ export default function speedly(config: InitConfig = {}) {
       }
     }
   }
+  console.log(
+    "init",
+    48,
+    fs.existsSync(path.join(process.cwd(), "src/module"))
+  );
   if (
     finalConfig.documentation &&
     fs.existsSync(path.join(process.cwd(), "src/module"))
