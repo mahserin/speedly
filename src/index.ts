@@ -11,5 +11,5 @@ export {
   ErrorRequestHandler,
 } from "express";
 
-// Override the default express() with our speedly function
+// Override the default express() with our speedly functions
 export default speedly;
