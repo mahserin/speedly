@@ -1,10 +1,13 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
+import document from "../document";
 type InitConfig = {
   notFoundHandler?: boolean;
   homeHandler?: boolean;
   errorHandler?: boolean;
   jsonParser?: boolean;
+  documentation?: boolean;
   urlEncodedParser?: boolean;
   cookieParser?: boolean;
   staticFiles?: boolean;
@@ -17,6 +20,7 @@ const defaultConfig: InitConfig = {
   errorHandler: true,
   homeHandler: true,
   jsonParser: true,
+  documentation: true,
   urlEncodedParser: true,
   cookieParser: true,
   staticFiles: true,
@@ -41,6 +45,11 @@ export default function speedly(config: InitConfig = {}) {
       }
     }
   }
+  if (
+    finalConfig.documentation &&
+    fs.existsSync(path.join(process.cwd(), "src/module"))
+  )
+    document(app, path.join(process.cwd(), "src/module"));
   if (finalConfig.staticFiles) app.use("/static", express.static("public"));
   if (finalConfig.homeHandler) {
     app.get("/", (req, res) => {
