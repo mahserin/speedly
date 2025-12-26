@@ -1,11 +1,16 @@
-import speedly, { InitFunction } from "./config/init";
+import speedly from "./config/init";
 
 // Export express types and classes
-import * as express from "express";
-import { Express } from "express";
-let exportObject = express as any as Express & InitFunction;
-Object.assign(exportObject, speedly);
-
+export {
+  Request,
+  Response,
+  NextFunction,
+  Application,
+  Router,
+  RequestHandler,
+  ErrorRequestHandler,
+} from "express";
+export type { InitConfig } from "./config/init";
+export { speedly };
 // Override the  default  express() with our speedly`s  functions
-
-export default exportObject;
+export default speedly;
