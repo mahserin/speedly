@@ -1,7 +1,8 @@
 import express from "express";
-
+import path from "path";
 type InitConfig = {
   notFoundHandler?: boolean;
+  homeHandler?: boolean;
   errorHandler?: boolean;
   jsonParser?: boolean;
   urlEncodedParser?: boolean;
@@ -14,6 +15,7 @@ export type InitFunction = (config?: InitConfig) => express.Express;
 const defaultConfig: InitConfig = {
   notFoundHandler: true,
   errorHandler: true,
+  homeHandler: true,
   jsonParser: true,
   urlEncodedParser: true,
   cookieParser: true,
@@ -40,7 +42,15 @@ export default function speedly(config: InitConfig = {}) {
     }
   }
   if (finalConfig.staticFiles) app.use("/static", express.static("public"));
-
+  if (finalConfig.homeHandler) {
+    app.get("/", (req, res) => {
+      res.send(`<h1>Welcome to ${
+        require(path.join(process.cwd(), "package.json")).name
+      } App</h1>
+      <p>Your app is running successfully.</p>
+      <p>Visit <a href="/docs">/docs</a> for API documentation.</p>`);
+    });
+  }
   // user can call this manually if needed
   const registerFallbacks = () => {
     if (finalConfig.notFoundHandler) {
