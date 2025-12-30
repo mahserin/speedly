@@ -62,7 +62,11 @@ export default function speedly(config: InitConfig = {}) {
         require(path.join(process.cwd(), "package.json")).name
       } App</h1>
       <p>Your app is running successfully.</p>
-      <p>Visit <a href="/docs">/docs</a> for API documentation.</p>`);
+     ${
+       finalConfig.documentation
+         ? '<p>Visit <a href="/docs">/docs</a> for API documentation.</p>'
+         : ""
+     }`);
     });
   }
   // user can call this manually if needed

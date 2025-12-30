@@ -227,14 +227,33 @@ function routeAnalyzer(route: any, routerName: string): RouteInfo {
 }
 
 /* =================== LOAD MODULES ==================== */
-
+function findRoutersInDir(dir: string): string[] {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const routers: string[] = [];
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      routers.push(...findRoutersInDir(fullPath));
+    } else if (
+      entry.isFile() &&
+      entry.name.match(/\.route(rs|r|s)?\.(js|ts)$/)
+    ) {
+      try {
+        if (require(fullPath)) {
+          routers.push(fullPath);
+        }
+      } catch (err) {}
+    }
+  }
+  return routers;
+}
 function RouterFetcher(baseDir: string) {
-  const modules = fs.readdirSync(baseDir);
+  const modules = findRoutersInDir(baseDir);
   let paths: RouteInfo = {};
   const tags: any[] = [];
 
   modules.forEach((mf) => {
-    const routerPath = path.join(baseDir, mf, `${mf}.routes.js`);
+    const routerPath = mf;
     try {
       const router = require(routerPath);
       paths = { ...paths, ...routeAnalyzer(router, mf) };
