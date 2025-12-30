@@ -259,7 +259,7 @@ function RouterFetcher(baseDir: string) {
           path
             .relative(baseDir, routerPath)
             .replaceAll(path.sep, "/")
-            .replaceAll(/\.[^/]/g, "")
+            .replaceAll(/\.[^/]+/g, "")
             .split("/")
         ),
       ]
