@@ -37,6 +37,7 @@
     "pub": "npm run build && git add . && git commit -m 'publish' && npm version patch && npm publish ",
     "dev": "ts-node src/index.ts"
   },
+  
   "author": "MAHSERIN",
   "license": "MIT",
   "description": "",
