@@ -251,7 +251,7 @@ function RouterFetcher(baseDir: string) {
   const modules = findRoutersInDir(baseDir);
   let paths: RouteInfo = {};
   const tags: any[] = [];
-
+  // Load each router and analyze
   modules.forEach((routerPath) => {
     const mf =
       [
