@@ -254,7 +254,15 @@ function RouterFetcher(baseDir: string) {
 
   modules.forEach((routerPath) => {
     const mf =
-      [...new Set(path.relative(baseDir, routerPath).split("\\"))]
+      [
+        ...new Set(
+          path
+            .relative(baseDir, routerPath)
+            .replaceAll(path.sep, "/")
+            .replaceAll(/\.[^/]/g, "")
+            .split("/")
+        ),
+      ]
         .join("/")
         .split(".")[0] || "default";
     try {
