@@ -67,7 +67,7 @@ const usingMongoDb = (
   config: {
     message?: string;
     path?: string;
-      first?: boolean;
+    first?: boolean;
     type?: "internal" | "external";
     response?: boolean;
   } = { type: "external" }
@@ -81,7 +81,7 @@ const usingMongoDb = (
   model = require(path.join(
     ...(config.type == "external"
       ? [require.main?.filename || "./", __path]
-      : ["../model"]),
+      : ["../../model"]),
     collectionName
   ));
   if (model.default) model = model.default;
@@ -637,7 +637,12 @@ const usingMongoDb = (
         if (config?.response) {
           const action =
             queryState.action?.match(/create|update|delet/i)?.[0] || "find";
-            if(queryState.action == "aggregate"&& config.first && data[0]?.content.length) data[0].content.length = data[0].content[0]
+          if (
+            queryState.action == "aggregate" &&
+            config.first &&
+            data[0]?.content.length
+          )
+            data[0].content.length = data[0].content[0];
           const resBody =
             queryState.action == "aggregate"
               ? {
