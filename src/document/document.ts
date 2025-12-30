@@ -252,8 +252,8 @@ function RouterFetcher(baseDir: string) {
   let paths: RouteInfo = {};
   const tags: any[] = [];
 
-  modules.forEach((mf) => {
-    const routerPath = mf;
+  modules.forEach((routerPath) => {
+    const mf = routerPath.split(path.sep).at(-1)?.split(".")[0] || "default";
     try {
       const router = require(routerPath);
       paths = { ...paths, ...routeAnalyzer(router, mf) };
