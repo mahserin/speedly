@@ -17,15 +17,15 @@
       "import": "./dist/esm/util/index.js",
       "require": "./dist/cjs/util/index.js"
     },
-    "./modules/": {
+    "./modules": {
       "import": "./dist/esm/modules/index.js",
       "require": "./dist/cjs/modules/index.js"
     },
-    "./document/": {
+    "./document": {
       "import": "./dist/esm/document/index.js",
       "require": "./dist/cjs/document/index.js"
     },
-    "./model/": {
+    "./model": {
       "import": "./dist/esm/model/index.js",
       "require": "./dist/cjs/model/index.js"
     }
