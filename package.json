@@ -1,6 +1,6 @@
 {
   "name": "speedly",
-  "version": "2.0.14",
+  "version": "2.0.15",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -37,7 +37,6 @@
     "pub": "npm run build && git add . && git commit -m 'publish' && npm version patch && npm publish ",
     "dev": "ts-node src/index.ts"
   },
-  
   "author": "MAHSERIN",
   "license": "MIT",
   "description": "",
