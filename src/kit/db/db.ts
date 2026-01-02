@@ -44,6 +44,11 @@ let configs: ConfigsType = {
 };
 type QueryState = {
   action?: string;
+  events: {
+    after?: (req: Request, document: any) => any;
+    before?: (req: Request, document: any) => any;
+    error?: (req: Request, error: any) => any;
+  };
   match?:
     | { [key: string]: unknown }
     | ((req: Request) => { [key: string]: unknown });
@@ -75,6 +80,7 @@ const usingMongoDb = (
   let model;
   let queryState: QueryState = {
     queries: [],
+    events: {},
   };
 
   if (config?.path) __path = config.path;
@@ -555,6 +561,9 @@ const usingMongoDb = (
         });
       // if(req.query.select) data = data.select(req.query.select)
       data = await data;
+      if (queryState.events.after) {
+        await queryState.events.after(req, data);
+      }
       if (!data) {
         next({
           status: 404,
@@ -703,7 +712,12 @@ const usingMongoDb = (
     });
     return handler;
   };
-
+  handler.after = (
+    onfulfilled: (req: Express.Request, document: any) => any
+  ) => {
+    queryState.events.after = onfulfilled;
+    return handler;
+  };
   handler.sort = (value: string | { [key: string]: -1 | 1 }) => {
     queryState.queries.push({
       type: "sort",
