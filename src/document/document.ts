@@ -286,7 +286,7 @@ function RouterFetcher(
       title: `${require(path.join(process.cwd(), "package.json")).name} APIs`,
       version: "1.0.0",
     },
-    servers: [{ url: "/api/v1" }],
+    servers,
     paths,
     tags,
     components: {
