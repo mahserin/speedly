@@ -7,7 +7,9 @@ type InitConfig = {
   homeHandler?: boolean;
   errorHandler?: boolean;
   jsonParser?: boolean;
-  documentation?: boolean;
+  documentation?:
+    | boolean
+    | { servers: { url: string; description?: string }[] };
   urlEncodedParser?: boolean;
   cookieParser?: boolean;
   staticFiles?: boolean;
@@ -40,7 +42,7 @@ export default function speedly(config: InitConfig = {}) {
     } catch (error: any) {
       if (error.code === "MODULE_NOT_FOUND") {
         console.warn(
-          "cookie-parser module not founds. Please reinstall it to use cookieParser middleware."
+          "cookie-parser module not founds. Please reinstall it to use cookieParser middleware.",
         );
       }
     }
@@ -48,13 +50,19 @@ export default function speedly(config: InitConfig = {}) {
   console.log(
     "init",
     48,
-    fs.existsSync(path.join(process.cwd(), "src/module"))
+    fs.existsSync(path.join(process.cwd(), "src/module")),
   );
   if (
     finalConfig.documentation &&
     fs.existsSync(path.join(process.cwd(), "src/module"))
   )
-    document(app, path.join(process.cwd(), "src/module"));
+    document(
+      app,
+      path.join(process.cwd(), "src/module"),
+      finalConfig.documentation === true
+        ? undefined
+        : finalConfig.documentation.servers,
+    );
   if (finalConfig.staticFiles) app.use("/static", express.static("public"));
   if (finalConfig.homeHandler) {
     app.get("/", (req, res) => {
