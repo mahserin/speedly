@@ -76,7 +76,7 @@ function translateYupSchema(schema: any) {
       acc[name] = translateField(field);
       return acc;
     },
-    {}
+    {},
   );
 
   return {
@@ -144,7 +144,7 @@ function routeAnalyzer(route: any, routerName: string): RouteInfo {
       };
 
       const validation: ValidationSchema | undefined = detail.middlewares.find(
-        (mw: any) => mw.handle?.__validationSchema
+        (mw: any) => mw.handle?.__validationSchema,
       )?.handle.__validationSchema;
 
       // If body exists
@@ -247,7 +247,10 @@ function findRoutersInDir(dir: string): string[] {
   }
   return routers;
 }
-function RouterFetcher(baseDir: string) {
+function RouterFetcher(
+  baseDir: string,
+  servers: { url: string; description?: string }[],
+) {
   const modules = findRoutersInDir(baseDir);
   let paths: RouteInfo = {};
   const tags: any[] = [];
@@ -260,7 +263,7 @@ function RouterFetcher(baseDir: string) {
             .relative(baseDir, routerPath)
             .replaceAll(path.sep, "/")
             .replaceAll(/\.[^/]+/g, "")
-            .split("/")
+            .split("/"),
         ),
       ]
         .join("/")
@@ -298,9 +301,10 @@ function RouterFetcher(baseDir: string) {
 
 export default function swaggerLoader(
   app: Express,
-  baseDir = path.join(process.cwd(), "src/module")
+  baseDir = path.join(process.cwd(), "src/module"),
+  servers: { url: string; description?: string }[] = [{ url: "/api/v1" }],
 ) {
-  const doc = RouterFetcher(baseDir);
+  const doc = RouterFetcher(baseDir, servers);
   const theme = new SwaggerTheme();
 
   app.use(
@@ -308,6 +312,6 @@ export default function swaggerLoader(
     swaggerUi.serve,
     swaggerUi.setup(doc, {
       customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
-    }) as RequestHandler
+    }) as RequestHandler,
   );
 }
