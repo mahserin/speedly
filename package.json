@@ -51,7 +51,7 @@
   },
   "peerDependencies": {
     "express": "^5",
-    "mongoose": "^8",
+    "mongoose": ">=8 <10",
     "multer": "^2"
   },
   "dependencies": {
