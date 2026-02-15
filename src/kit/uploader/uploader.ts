@@ -32,7 +32,7 @@ export default (
   destination:
     | string
     | ((req: Request, file: Express.Multer.File) => string) = "/image",
-  config = configs
+  config = configs,
 ) => {
   let dest: string;
   try {
@@ -73,11 +73,11 @@ export default (
 
           const originalName = Buffer.from(
             file.originalname,
-            "latin1"
+            "latin1",
           ).toString("utf8");
           const fileName =
             (configs.prefix ? configs.prefix + "-" : "") +
-            originalName.replace(/\.\w+$/, "") +
+            (req.body.name || originalName.replace(/\.\w+$/, "")) +
             ext;
           const filePath = path.join(configs.path, dest, fileName);
           try {
@@ -86,7 +86,7 @@ export default (
           if (fs.existsSync(filePath)) {
             return cb(
               new Error("File already exists in the destination folder"),
-              ""
+              "",
             );
           }
 
@@ -139,7 +139,7 @@ export default (
               req.body[fieldName] = path
                 .join(
                   "/static",
-                  path.relative(path.join(configs.path), req.file.path)
+                  path.relative(path.join(configs.path), req.file.path),
                 )
                 .replaceAll(/\\/g, "/");
             }
@@ -160,9 +160,9 @@ export default (
                   path
                     .join(
                       "/static",
-                      path.relative(path.join(configs.path), file.path)
+                      path.relative(path.join(configs.path), file.path),
                     )
-                    .replaceAll(/\\/g, "/")
+                    .replaceAll(/\\/g, "/"),
               );
             }
 
