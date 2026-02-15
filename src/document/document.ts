@@ -3,6 +3,7 @@ import path from "path";
 import swaggerUi from "swagger-ui-express";
 import { Express, RequestHandler } from "express";
 import { SwaggerTheme, SwaggerThemeNameEnum } from "swagger-themes";
+import { expressToSwagger } from "./parser";
 
 const METHODS_WITH_BODY = ["post", "put", "patch"] as const;
 type HttpMethod = (typeof METHODS_WITH_BODY)[number] | "get" | "delete";
@@ -132,9 +133,7 @@ function routeAnalyzer(route: any, routerName: string): RouteInfo {
   const paramsRegex = /:[^/]+/g;
 
   scanned.forEach((route: any) => {
-    const fullPath = `/${routerName}${route.path
-      .replace(/^\/$/, "")
-      .replaceAll(paramsRegex, (r: string) => `{${r.slice(1)}}`)}`;
+    const fullPath = `/${routerName}${expressToSwagger(route.path)}`;
     routerDetails[fullPath] = {};
 
     Object.entries(route.methods).forEach(([method, detail]: any) => {
