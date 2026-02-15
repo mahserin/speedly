@@ -49,13 +49,15 @@
     "tsc": "^2.0.4",
     "typescript": "^5.9.3"
   },
+  "peerDependencies": {
+    "express": "^5",
+    "mongoose": "^8",
+    "multer": "^2"
+  },
   "dependencies": {
     "axios": "^1.11.0",
     "cosmiconfig": "^9.0.0",
-    "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.2",
-    "multer": "^2.0.2",
     "swagger-themes": "^1.4.3",
     "swagger-ui-express": "^5.0.1",
     "translate": "^3.0.1",
