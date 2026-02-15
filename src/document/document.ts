@@ -150,7 +150,7 @@ function routeAnalyzer(route: any, routerName: string): RouteInfo {
           name,
           in: "path",
           required:
-            validation?.params?.fields?.[name]?.required ||
+            validation?.params?.fields?.[name]?.spec?.optional == false ||
             !new RegExp(`\\{[^\\}]*${name}[^\\}]*\\}`).test(route.path),
           schema: { type: "string" },
         }));
