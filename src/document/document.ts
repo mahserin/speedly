@@ -130,7 +130,6 @@ function scanRouter(router: any, base = ""): any[] {
 function routeAnalyzer(route: any, routerName: string): RouteInfo {
   const routerDetails: RouteInfo = {};
   const scanned = scanRouter(route);
-  const paramsRegex = /:[^/]+/g;
 
   scanned.forEach((route: any) => {
     const fullPath = `/${routerName}${expressToSwagger(route.path)}`;
@@ -141,10 +140,21 @@ function routeAnalyzer(route: any, routerName: string): RouteInfo {
         tags: [routerName.replace("_", " ")],
         description: "Public route",
       };
-
       const validation: ValidationSchema | undefined = detail.middlewares.find(
         (mw: any) => mw.handle?.__validationSchema,
       )?.handle.__validationSchema;
+      const pathParams = [...fullPath.matchAll(/{([^}]+)}/g)].map((m) => m[1]);
+
+      if (pathParams.length) {
+        doc.parameters = pathParams.map((name) => ({
+          name,
+          in: "path",
+          required:
+            validation?.params?.fields?.[name]?.required ||
+            !new RegExp(`\\{[^\\}]*${name}[^\\}]*\\}`).test(route.path),
+          schema: { type: "string" },
+        }));
+      }
 
       // If body exists
       if (METHODS_WITH_BODY.includes(method)) {
