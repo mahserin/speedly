@@ -1,6 +1,6 @@
 import axios from "axios";
 import translationModel from "./../model/translation";
-
+const TIMEOUT = 5000;
 import getConfig from "./getConfig";
 const configs: { one_api_token?: string } = { ...getConfig("translate") };
 async function firstSuccessful(promises: Promise<any>[]) {
@@ -35,7 +35,7 @@ export default async (text: string = "unspecified text", lang = "fa") => {
     (async () => {
       const res = await axios.get(
         `https://655.mtis.workers.dev/translate?text=${encodeURIComponent(formattedText)}&source_lang=en&target_lang=${lang}`,
-        { timeout: 2000 },
+        { timeout: TIMEOUT },
       );
       if (!res.data?.response?.translated_text)
         throw new Error("Translation failed");
@@ -52,7 +52,7 @@ export default async (text: string = "unspecified text", lang = "fa") => {
           target: lang,
         },
         {
-          timeout: 2000,
+          timeout: TIMEOUT,
           headers: {
             "one-api-token": "783122:68a02b5c4dcee",
           },
