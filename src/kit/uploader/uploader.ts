@@ -78,9 +78,9 @@ export default (
           ).toString("utf8");
           const fileName =
             (configs.prefix ? configs.prefix + "-" : "") +
-            (typeof filename === "function"
+            ((typeof filename === "function"
               ? filename(req, file)
-              : filename || originalName.replace(/\.\w+$/, "")) +
+              : filename) || originalName.replace(/\.\w+$/, "")) +
             ext;
           const filePath = path.join(configs.path, dest, fileName);
           try {
