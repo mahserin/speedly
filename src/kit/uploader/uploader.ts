@@ -32,6 +32,7 @@ export default (
   destination:
     | string
     | ((req: Request, file: Express.Multer.File) => string) = "/image",
+  filename: string | ((req: Request, file: Express.Multer.File) => string),
   config = configs,
 ) => {
   let dest: string;
@@ -77,7 +78,9 @@ export default (
           ).toString("utf8");
           const fileName =
             (configs.prefix ? configs.prefix + "-" : "") +
-            (req.body.name || originalName.replace(/\.\w+$/, "")) +
+            (typeof filename === "function"
+              ? filename(req, file)
+              : filename || originalName.replace(/\.\w+$/, "")) +
             ext;
           const filePath = path.join(configs.path, dest, fileName);
           try {
