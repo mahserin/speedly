@@ -292,7 +292,7 @@ function RouterFetcher(
   return {
     openapi: "3.0.3",
     info: {
-      title: `${require(path.join(process.cwd(), "package.json")).name} APIs`,
+      title: `${require(path.join(process.cwd(), "package.json")).name} Documentation`,
       version: "1.0.0",
     },
     servers,

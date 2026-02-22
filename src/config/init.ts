@@ -1,6 +1,7 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import path from "path";
 import fs from "fs";
+import { translator } from "../util";
 import document from "../document";
 type InitConfig = {
   notFoundHandler?: boolean;
@@ -84,10 +85,39 @@ export default function speedly(config: InitConfig = {}) {
     }
 
     if (finalConfig.errorHandler) {
-      app.use((error: any, req: any, res: any, next: any) => {
-        console.error("Speedly Error:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-      });
+      app.use(
+        async (
+          err:
+            | {
+                json: { message: string; [key: string]: unknown };
+                status: number;
+                config?: { translate: boolean; [key: string]: unknown };
+              }
+            | ErrorEvent,
+          req: Request,
+          res: Response,
+          _next: NextFunction,
+        ) => {
+          console.log("app", 39, err);
+          const config = { translate: true, ...((err as any).config || {}) };
+          const body = (err as any).json || {
+            message: (err as any).message || "internal error",
+          };
+          if ((err as any)?.status == 401)
+            return res.status((err as any).status).json(body);
+          if (body.message && req.query.lang !== "en" && config.translate)
+            try {
+              body.message = await translator(
+                body.message,
+                (typeof req.query.lang === "string" ? req.query.lang : "fa") ||
+                  "fa",
+              );
+            } catch (error) {
+              console.error("Translation error:", error);
+            }
+          res.status((err as any).status || 500).json(body);
+        },
+      );
     }
   };
 
